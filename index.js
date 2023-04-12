@@ -1,11 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const url = require('url');
-
-
-// Read API
-const  data= fs.readFileSync(`${__dirname}/dev-data/data.json` , "utf-8");
-const dataObj = JSON.parse(data);
+const replaceTemplates= require('./modules/replaceTemplates');
 
 
 
@@ -17,23 +13,23 @@ const  tempProduct= fs.readFileSync(`${__dirname}/templates/template-product.htm
 const  tempCard= fs.readFileSync(`${__dirname}/templates/template-card.html` , "utf-8");
 
 
+// Replace Placeholder with Json data 
+
+
 // Create server
 const server = http.createServer((req, res) => {
-  const {query,pathname} = url.parse(req.url , true);
-  // Replace Placeholder with Json data 
-  const replaceTemplates=(temp, product)=>{
-    let output = temp.replace(/{%PRODUCTNAME%}/g,product.productName);
-    output = output.replace(/{%IMAGE%}/g,product.image);
-    output = output.replace(/{%QUANTITY%}/g,product.quantity);
-    output = output.replace(/{%PRICE%}/g,product.price);
-    output = output.replace(/{%NEUTRIENTS%}/g,product.nutrients);
-    output = output.replace(/{%DESCRIPTION%}/g,product.description);
-    output = output.replace(/{%COUNTRYNAME%}/g,product.from);
-    output = output.replace(/{%COUNTRYNAME%}/g,product.from);
-    output = output.replace(/{%ID%}/g,product.id);
-    if (product.organic === false) output = output.replace(/{%NOT_ORGANIC%}/g,'not-organic');
-    return output;
-  }
+  // Read API
+  const  data= fs.readFileSync(`${__dirname}/dev-data/data.json` , "utf-8");
+  const dataObj = JSON.parse(data);
+  
+  
+  //Fetching paths
+  // const {query,pathname} = url.parse(req.url , true);
+  const parsedUrl = url.parse(req.url, true);
+const query = parsedUrl.query;
+const pathname = parsedUrl.pathname;
+
+
   //OVERVIEW
   if (pathname === '/overview' || pathname === "/") {
     res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -43,9 +39,11 @@ const server = http.createServer((req, res) => {
     res.end(output); 
 //PRODUCT PAGE
   } else if (pathname === '/product') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    console.log(query);
-    let product =  dataObj[query.id];
+    res.writeHead(200, { 'Content-Type': 'text/html'});
+    let index = dataObj.findIndex(ind => ind.id == query.id);
+    let product =  dataObj[index];
+    console.log(index);
+    console.log(product);
     const output= replaceTemplates(tempProduct, product);
     res.end(output);
 //API
@@ -60,7 +58,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
-// Listen to incoming requests on port 3000
+// Listen to incoming requests on PORT
 server.listen(7000, () => {
   console.log('Server is running on port 7000');
 });
@@ -105,3 +103,4 @@ server.listen(7000, () => {
 // });
 
 /////////////////
+// index = numbers.findIndex(number => number === 6);
